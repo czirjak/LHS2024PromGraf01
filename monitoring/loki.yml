@@ -24,3 +24,4 @@ schema_config:
       index:
         prefix: loki_index_
         period: 24h
+

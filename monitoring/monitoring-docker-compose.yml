@@ -25,8 +25,8 @@ services:
     ports:
       - '9090:9090'
     volumes:
-      - /home/prodcodehunters/repositories/deployment/environments/02_prod/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - /home/prodcodehunters/volumes/prometheus:/prometheus
+      - ~/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ~/volumes/prometheus:/prometheus
     networks:
       - codehunters-network
     command:
@@ -44,7 +44,7 @@ services:
     ports:
       - '9091:3000'
     volumes:
-      - /home/prodcodehunters/volumes/grafana:/var/lib/grafana
+      - ~/volumes/grafana:/var/lib/grafana
     networks:
       - codehunters-network
     environment:
@@ -64,13 +64,12 @@ services:
     ports:
       - '3100:3100'
     volumes:
-      - /home/prodcodehunters/volumes/loki:/loki
-      - /home/prodcodehunters/repositories/deployment/environments/02_prod/monitoring/loki.yml:/etc/loki/local-config.yaml
+      - ~/volumes/loki:/loki
+      - ~/loki.yml:/etc/loki/local-config.yaml
     networks:
       - codehunters-network
     command:
       - '--config.file=/etc/loki/local-config.yaml'
 
 networks:
-  codehunters-network:
-    external: true
+  codehunters-network: { }
