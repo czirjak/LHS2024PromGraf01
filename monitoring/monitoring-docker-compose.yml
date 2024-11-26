@@ -1,0 +1,76 @@
+version: '3.3'
+services:
+  node-exporter:
+    user: "1003"
+    image: prom/node-exporter:latest
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - codehunters-network
+    ports:
+      - "9100:9100"
+    restart: always
+
+  prometheus:
+    user: "1003"
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - '9090:9090'
+    volumes:
+      - /home/prodcodehunters/repositories/deployment/environments/02_prod/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /home/prodcodehunters/volumes/prometheus:/prometheus
+    networks:
+      - codehunters-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    user: "1003"
+    image: grafana/grafana:latest
+    restart: always
+    ports:
+      - '9091:3000'
+    volumes:
+      - /home/prodcodehunters/volumes/grafana:/var/lib/grafana
+    networks:
+      - codehunters-network
+    environment:
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=smtp.forpsi.com:587
+      - GF_SMTP_USER=no-reply@cdhntrs.hu
+      - GF_SMTP_FROM_ADDRESS=no-reply@cdhntrs.hu
+      - GF_SMTP_FROM_NAME=CodeHuntersGrafana
+      - GF_SMTP_PASSWORD=${GRAFANA_EMAIL_PASSWORD}
+      - GF_SERVER_ROOT_URL=https://monitoring.codehunters.hu
+      - GF_SERVER_DOMAIN=monitoring.codehunters.hu
+
+  loki:
+    user: "1003"
+    image: grafana/loki:main
+    restart: always
+    ports:
+      - '3100:3100'
+    volumes:
+      - /home/prodcodehunters/volumes/loki:/loki
+      - /home/prodcodehunters/repositories/deployment/environments/02_prod/monitoring/loki.yml:/etc/loki/local-config.yaml
+    networks:
+      - codehunters-network
+    command:
+      - '--config.file=/etc/loki/local-config.yaml'
+
+networks:
+  codehunters-network:
+    external: true
